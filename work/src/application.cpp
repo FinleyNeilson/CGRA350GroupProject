@@ -24,7 +24,7 @@ using namespace glm;
 
 void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
     mat4 modelview = view * modelTransform;
-    mat3 normalMatrix = glm::transpose(glm::inverse(mat3(modelview))); // correct
+    mat3 normalMatrix = glm::transpose(glm::inverse(mat3(modelview)));
 
     glUseProgram(shader);
     glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, GL_FALSE, value_ptr(proj));
@@ -34,8 +34,8 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 
     glm::vec3 lightDir_world = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
     glm::vec3 lightDir_view = glm::normalize(glm::mat3(view) * lightDir_world);
-    glm::vec3 lightColor = glm::vec3(1.0f);
-    glm::vec3 ambientColor = glm::vec3(0.15f);
+    glm::vec3 lightColor = glm::vec3(1.3f);
+    glm::vec3 ambientColor = glm::vec3(0.35f);
 
     glUniform3fv(glGetUniformLocation(shader, "uLightDir"), 1, value_ptr(lightDir_view));
     glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, value_ptr(lightColor));
@@ -68,13 +68,20 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 
 	terrain.setParameters(
 		12.0f,      // octaves
-		0.02f,  // frequency
-		2.0f,  // amplitude
+		0.0002f,  // frequency
+		6.0f,  // amplitude
 		0.5f,   // gain
 		1.0f    // lacunarity
 	);
 
 	terrain.regenerate();
+	terrain.addCoarseNoise(0.0004f, 3);
+	terrain.addCoarseNoise(0.008f, 2);
+	//terrain.addCoarseNoise(0.01f, 0.5);
+	terrain.addCoarseNoise(0.08f, 0.04);
+	terrain.addCoarseNoise(0.8f, 0.008);
+	//terrain.addCoarseNoise(0.3f, 0.5);
+
 	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
 }
 
@@ -164,12 +171,6 @@ void Application::renderGUI() {
             m_model.color = glm::vec3(col[0], col[1], col[2]);
         }
     }
-
-	// example of how to use input boxes
-	static float exampleInput;
-	if (ImGui::InputFloat("example input", &exampleInput)) {
-		cout << "example input changed to " << exampleInput << endl;
-	}
 
 	// finish creating window
 	ImGui::End();

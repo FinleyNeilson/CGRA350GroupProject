@@ -40,6 +40,19 @@ public:
         computeSlopes();
     }
 
+    void addCoarseNoise(float frequency, float amplitude, int octaves = 6, float lacunarity = 1.2f, float gain = 0.5f) {
+    for (int z = 0; z < depth; ++z) {
+        for (int x = 0; x < width; ++x) {
+            float nx = x * frequency;
+            float nz = z * frequency;
+
+            float h = perlin::fbm2d(nx, nz, octaves, lacunarity, gain) * amplitude;
+            heights[z*width + x] += h;
+        }
+    }
+    computeSlopes();
+}
+
     float getHeight(int x, int z) const {
         if (x < 0 || x >= width || z < 0 || z >= depth) return 0.0f;
         return heights[z * width + x];

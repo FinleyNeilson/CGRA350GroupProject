@@ -17,7 +17,7 @@
 struct basic_model {
 	GLuint shader = 0;
 	cgra::gl_mesh mesh;
-	glm::vec3 color{0.7};
+	glm::vec3 color{0.38f, 0.2f, 0.1f};
 	glm::mat4 modelTransform{1.0};
 	GLuint texture;
 

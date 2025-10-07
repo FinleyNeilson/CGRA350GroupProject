@@ -10,7 +10,7 @@ namespace cgra {
 	// immediately draws the sphere mesh, assuming the shader is set up
 	void drawSphere();
 
-	gl_mesh plane_terrain(int width, int depth, HeightmapGenerator& terrain, glm::vec3 offset = { -10,0,-10 }, float scaleX = 0.1f, float scaleZ = 0.1f);
+	gl_mesh plane_terrain(int width, int depth, HeightmapGenerator& terrain, glm::vec3 offset = { -10,0,-10 }, float scaleX = 0.02f, float scaleZ = 0.02f);
 
 	// creates a mesh for a unit cylinder (radius and hieght of 1) along the z-axis
 	// immediately draws the sphere mesh, assuming the shader is set up
