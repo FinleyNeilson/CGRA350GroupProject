@@ -23,25 +23,25 @@ using namespace glm;
 
 
 void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
-    mat4 modelview = view * modelTransform;
-    mat3 normalMatrix = glm::transpose(glm::inverse(mat3(modelview)));
+	mat4 modelview = view * modelTransform;
+	mat3 normalMatrix = glm::transpose(glm::inverse(mat3(modelview)));
 
-    glUseProgram(shader);
-    glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, GL_FALSE, value_ptr(proj));
-    glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, value_ptr(modelview));
-    glUniformMatrix3fv(glGetUniformLocation(shader, "uNormalMatrix"), 1, GL_FALSE, value_ptr(normalMatrix));
-    glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
+	glUseProgram(shader);
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, GL_FALSE, value_ptr(proj));
+	glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, value_ptr(modelview));
+	glUniformMatrix3fv(glGetUniformLocation(shader, "uNormalMatrix"), 1, GL_FALSE, value_ptr(normalMatrix));
+	glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(color));
 
-    glm::vec3 lightDir_world = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
-    glm::vec3 lightDir_view = glm::normalize(glm::mat3(view) * lightDir_world);
-    glm::vec3 lightColor = glm::vec3(1.3f);
-    glm::vec3 ambientColor = glm::vec3(0.35f);
+	glm::vec3 lightDir_world = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
+	glm::vec3 lightDir_view = glm::normalize(glm::mat3(view) * lightDir_world);
+	glm::vec3 lightColor = glm::vec3(1.3f);
+	glm::vec3 ambientColor = glm::vec3(0.35f);
 
-    glUniform3fv(glGetUniformLocation(shader, "uLightDir"), 1, value_ptr(lightDir_view));
-    glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, value_ptr(lightColor));
-    glUniform3fv(glGetUniformLocation(shader, "uAmbientColor"), 1, value_ptr(ambientColor));
+	glUniform3fv(glGetUniformLocation(shader, "uLightDir"), 1, value_ptr(lightDir_view));
+	glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, value_ptr(lightColor));
+	glUniform3fv(glGetUniformLocation(shader, "uAmbientColor"), 1, value_ptr(ambientColor));
 
-    mesh.draw();
+	mesh.draw();
 }
 
 
@@ -61,30 +61,10 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
-	const int terrainWidth = 1000;
-	const int terrainDepth = 1000;
-
-	HeightmapGenerator terrain(terrainWidth, terrainDepth);
-
-	terrain.setParameters(
-		12.0f,      // octaves
-		0.0002f,  // frequency
-		6.0f,  // amplitude
-		0.5f,   // gain
-		1.0f    // lacunarity
-	);
-
-	terrain.regenerate();
-	terrain.addCoarseNoise(0.0004f, 3);
-	terrain.addCoarseNoise(0.008f, 2);
-	//terrain.addCoarseNoise(0.01f, 0.5);
-	terrain.addCoarseNoise(0.08f, 0.04);
-	terrain.addCoarseNoise(0.8f, 0.008);
-	//terrain.addCoarseNoise(0.3f, 0.5);
-
-	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
+	m_terrain.setParameters(ui_octaves, ui_frequency, ui_amplitude, ui_gain, ui_lacunarity);
+	m_terrain.regenerate();
+	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
 }
-
 
 void Application::render() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -129,6 +109,9 @@ void Application::renderGUI() {
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
 	ImGui::Begin("Options", 0);
 
+	ImGuiIO& io = ImGui::GetIO();
+	io.FontGlobalScale = 2.5f;
+
 	// display current camera parameters
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, -pi<float>() / 2, pi<float>() / 2, "%.2f");
@@ -145,32 +128,96 @@ void Application::renderGUI() {
 
 	ImGui::Separator();
 
-	 if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Model color");
-        if (ImGui::ColorEdit3("##ModelColor", &m_model.color[0])) {
-            // color changed — optional debug print
-            std::cout << "model color = ("
-                      << m_model.color.r << ", "
-                      << m_model.color.g << ", "
-                      << m_model.color.b << ")\n";
-        }
+	if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Text("Model color");
 
-        // quick preset buttons
-        ImGui::SameLine();
-        if (ImGui::Button("Red"))    m_model.color = glm::vec3(1.0f, 0.0f, 0.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("Green"))  m_model.color = glm::vec3(0.0f, 1.0f, 0.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("Blue"))   m_model.color = glm::vec3(0.0f, 0.0f, 1.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("White"))  m_model.color = glm::vec3(1.0f);
+		float col[3] = { m_model.color.r, m_model.color.g, m_model.color.b };
+		if (ImGui::SliderFloat3("RGB sliders", col, 0.0f, 1.0f)) {
+			m_model.color = glm::vec3(col[0], col[1], col[2]);
+		}
+	}
 
-        // small value tweakers if you prefer sliders
-        float col[3] = { m_model.color.r, m_model.color.g, m_model.color.b };
-        if (ImGui::SliderFloat3("RGB sliders", col, 0.0f, 1.0f)) {
-            m_model.color = glm::vec3(col[0], col[1], col[2]);
-        }
+	if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+    ImGui::Spacing();
+    ImGui::Text("Base Layer Parameters");
+
+    ImGui::SliderInt("Octaves", &ui_octaves, 1, 16);
+    ImGui::InputFloat("Frequency", &ui_frequency, 0.001f, 0.0f);
+    ImGui::InputFloat("Amplitude", &ui_amplitude, 0.01f, 0.0f);
+    ImGui::InputFloat("Gain", &ui_gain, 0.01f, 0.0f);
+    ImGui::InputFloat("Lacunarity", &ui_lacunarity, 0.01f, 0.0f);
+
+    if (ImGui::Button("Regenerate Base + Layers")) {
+        m_terrain.setParameters(ui_octaves, ui_frequency, ui_amplitude, ui_gain, ui_lacunarity);
+        m_terrain.regenerate();
+        m_model.mesh = cgra::plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
     }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Reset Base")) {
+        ui_octaves = HeightmapGenerator::DefaultParams::OCTAVES;
+        ui_frequency = HeightmapGenerator::DefaultParams::FREQUENCY;
+        ui_amplitude = HeightmapGenerator::DefaultParams::AMPLITUDE;
+        ui_gain = HeightmapGenerator::DefaultParams::GAIN;
+        ui_lacunarity = HeightmapGenerator::DefaultParams::LACUNARITY;
+
+        m_terrain.setParameters(ui_octaves, ui_frequency, ui_amplitude, ui_gain, ui_lacunarity);
+        m_terrain.regenerate();
+        m_model.mesh = cgra::plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Extra Noise Layers");
+
+    // Display each extra layer
+    auto& layers = m_terrain.getLayers();
+    for (size_t i = 0; i < layers.size(); ++i) {
+        auto& layer = layers[i];
+        float freq = layer.first;
+        float amp  = layer.second;
+
+        ImGui::PushID((int)i); // ensure unique IDs
+        ImGui::InputFloat("Freq", &freq, 0.001f, 0.0f);
+        ImGui::InputFloat("Amp", &amp, 0.01f, 0.0f);
+        if (ImGui::Button("Remove")) {
+            m_terrain.removeLayer(i);
+            m_terrain.regenerate();
+            m_model.mesh = cgra::plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+            ImGui::PopID();
+            break; // break to avoid invalidating iterator
+        }
+        ImGui::PopID();
+
+        // update layer if sliders changed
+        layer.first = freq;
+        layer.second = amp;
+    }
+
+    ImGui::Separator();
+    ImGui::Text("Add New Layer");
+    static float newFreq = 0.005f;
+    static float newAmp  = 0.5f;
+
+    ImGui::InputFloat("New Layer Freq", &newFreq, 0.001f, 0.0f);
+    ImGui::InputFloat("New Layer Amp", &newAmp, 0.01f, 0.0f);
+
+    if (ImGui::Button("Add Layer")) {
+        m_terrain.addLayer(newFreq, newAmp);
+        m_terrain.regenerate();
+        m_model.mesh = cgra::plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+    }
+
+	ImGui::Spacing();
+    ImGui::Text("Thermal Erosion");
+    ImGui::SliderInt("Iterations", &ui_erosionIterations, 1, 20);
+    ImGui::InputFloat("Repose Angle", &ui_reposeAngle, 0.01f, 0.0f);
+
+    if (ImGui::Button("Apply Erosion")) {
+        m_terrain.applyThermalErosion(ui_erosionIterations, ui_reposeAngle);
+        m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+    }
+}
 
 	// finish creating window
 	ImGui::End();
