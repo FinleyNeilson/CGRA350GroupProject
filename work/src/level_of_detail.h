@@ -29,7 +29,7 @@ private:
 
 public:
     void update_lod(const glm::mat4 &view, glm::mat4 &proj);
-    int get_lod_level(glm::vec3 model_position);
+    int get_lod_level(glm::vec3 model_position) const;
     void create_tree(const glm::vec3& pos);
 
     std::vector<float> lod_thresholds; // Vector of thresholds that determine the distance lod level will change
