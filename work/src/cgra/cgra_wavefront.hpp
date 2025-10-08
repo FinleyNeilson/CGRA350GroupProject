@@ -157,11 +157,12 @@ namespace cgra {
 		mesh_builder mb;
 
 		for (unsigned int i = 0; i < wv_vertices.size(); ++i) {
+			vec2 uv = (uvs.empty()) ? vec3{} : uvs[wv_vertices[i].t];
 			mb.push_index(i);
 			mb.push_vertex(mesh_vertex{
 				positions[wv_vertices[i].p],
 				normals[wv_vertices[i].n],
-				uvs[wv_vertices[i].t]
+				uv
 			});
 		}
 
