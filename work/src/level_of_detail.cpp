@@ -29,6 +29,8 @@ namespace lod {
 
             model = scale(model, vec3(10,10,10));
 
+            glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(view * model));
+
             if (lod == 0) {
                 glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(1,1,1)));
                 tree1_lod0.draw();
@@ -36,9 +38,6 @@ namespace lod {
                 glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(0,1,1)));
                 tree1_lod0.draw();
             }
-
-            glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(view * model));
-
         }
     }
 
