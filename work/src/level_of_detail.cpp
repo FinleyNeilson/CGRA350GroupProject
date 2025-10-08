@@ -46,7 +46,7 @@ namespace lod {
      * @param model_position
      * @return
      */
-    int level_of_detail::get_lod_level(vec3 model_position) {
+    int level_of_detail::get_lod_level(const vec3 model_position) const {
         float dist = distance(viewer_position, model_position);
         for (size_t i = 0; i < lod_thresholds.size(); ++i) {
             if (dist < lod_thresholds[i]) {
