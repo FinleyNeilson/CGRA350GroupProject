@@ -6,6 +6,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 // project
+#include "level_of_detail.h"
 #include "opengl.hpp"
 #include "cgra/cgra_mesh.hpp"
 #include "skeleton_model.hpp"
@@ -53,6 +54,9 @@ private:
 
 	// geometry
 	basic_model m_model;
+
+	// Level of Detail
+	lod::level_of_detail LOD;
 
 public:
 	// setup

@@ -16,6 +16,9 @@
 #include "cgra/cgra_shader.hpp"
 #include "cgra/cgra_wavefront.hpp"
 
+// Lod
+#include "level_of_detail.h"
+
 
 using namespace std;
 using namespace cgra;
@@ -61,6 +64,8 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
+	LOD.shader = m_shaders[m_currentShaderIdx];
+
 	const int terrainWidth = 1000;
 	const int terrainDepth = 1000;
 
@@ -83,6 +88,13 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	//terrain.addCoarseNoise(0.3f, 0.5);
 
 	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
+
+	// Create trees
+	LOD.create_tree(vec3(0,0,0));
+	LOD.create_tree(vec3(50,0,0));
+
+	vector<float> thresholds = {10};
+	LOD.lod_thresholds = thresholds;
 }
 
 
@@ -119,7 +131,9 @@ void Application::render() {
 	glPolygonMode(GL_FRONT_AND_BACK, (m_showWireframe) ? GL_LINE : GL_FILL);
 
 	// draw the model
-	m_model.draw(view, proj);
+	//m_model.draw(view, proj);
+
+	LOD.update_lod(view, proj);
 }
 
 void Application::renderGUI() {
@@ -148,7 +162,7 @@ void Application::renderGUI() {
 	 if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
         ImGui::Text("Model color");
         if (ImGui::ColorEdit3("##ModelColor", &m_model.color[0])) {
-            // color changed — optional debug print
+            // color changed ï¿½ optional debug print
             std::cout << "model color = ("
                       << m_model.color.r << ", "
                       << m_model.color.g << ", "
