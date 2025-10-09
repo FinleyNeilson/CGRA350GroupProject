@@ -136,8 +136,7 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	LOD.shader = lod_shader;
 
 	// Create trees
-	LOD.create_tree(vec3(0,0,0));
-	LOD.create_tree(vec3(50,0,0));
+	LOD.generate_trees(m_terrain);
 
 	vector<float> thresholds = {10};
 	LOD.lod_thresholds = thresholds;
@@ -152,6 +151,7 @@ void Application::regenerateTerrain() {
 	m_model.maxHeight = mm.second;
 
 	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+	LOD.generate_trees(m_terrain);
 }
 
 void Application::render() {
@@ -190,7 +190,7 @@ void Application::render() {
 	m_model.draw(view, proj);
 
 	// Draw lod models
-	//LOD.update_lod(view, proj);
+	LOD.update_lod(view, proj);
 }
 
 void Application::renderGUI() {

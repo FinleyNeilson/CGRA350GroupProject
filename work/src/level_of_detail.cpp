@@ -25,7 +25,7 @@ namespace lod {
             const int lod = get_lod_level(pos);
             mat4 model = translate(mat4(1.0f), pos);
 
-            model = scale(model, vec3(10,10,10));
+            model = scale(model, vec3(0.1,0.1,0.1));
 
             glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(view * model));
 
@@ -57,5 +57,30 @@ namespace lod {
     void level_of_detail::create_tree(const vec3& pos) {
         tree_positions.push_back(pos);
     }
+
+    void level_of_detail::generate_trees(const HeightmapGenerator& m_terrain) {
+        tree_positions.clear();
+        std::mt19937 rng(std::random_device{}());
+        for (float x = 0; x<20; x+=1.f) {
+            for (float y = 0; y<20; y+=1.f) {
+                // Add some variance to tree placement
+                std::uniform_real_distribution<float> dist_x(-0.3f, 0.3f);
+                std::uniform_real_distribution<float> dist_y(-0.3f, 0.3f);
+                x +=  dist_x(rng);
+                y +=  dist_y(rng);
+
+                // clamp inside the ground area
+                clamp(x, 0.f, 20.f);
+                clamp(y, 0.f, 20.f);
+
+                // Check height is in the grass level
+                float height = m_terrain.getHeight(x*50.f,y*50.f);
+                if (height < -2) { // TODO get grass level from m_terrain since changing amplitude messes with this
+                    create_tree(vec3(x - 10,height ,y - 10));
+                }
+            }
+        }
+    }
+
 
 } // lod
