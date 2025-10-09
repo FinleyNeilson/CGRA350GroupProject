@@ -64,8 +64,15 @@ namespace cgra {
 		// Build vertices with initial zero normals
 		for (int z = 0; z < depth; ++z) {
 			for (int x = 0; x < width; ++x) {
-				vec2 uv = vec2(float(x) / (width - 1), float(z) / (depth - 1));
-				vertices.push_back(mesh_vertex{ positions[z * width + x], vec3(0.0f), uv });
+			vec2 uv = vec2(float(x) / (width - 1), float(z) / (depth - 1));
+            vec3 p = positions[z * width + x];
+            float h = p.y; // world-space height (including offset.y)
+            mesh_vertex v;
+            v.pos = p;
+            v.norm = vec3(0.0f); // accumulate later
+            v.uv = uv;
+            v.height = h;
+            vertices.push_back(v);
 			}
 		}
 

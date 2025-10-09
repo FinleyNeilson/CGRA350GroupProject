@@ -37,12 +37,59 @@ void basic_model::draw(const glm::mat4& view, const glm::mat4 proj) {
 
     glm::vec3 lightDir_world = glm::normalize(glm::vec3(0.5f, 1.0f, 0.3f));
     glm::vec3 lightDir_view = glm::normalize(glm::mat3(view) * lightDir_world);
-    glm::vec3 lightColor = glm::vec3(1.3f);
-    glm::vec3 ambientColor = glm::vec3(0.35f);
+    glm::vec3 lightColor = glm::vec3(1.4f);
+    glm::vec3 ambientColor = glm::vec3(0.45f);
 
     glUniform3fv(glGetUniformLocation(shader, "uLightDir"), 1, value_ptr(lightDir_view));
     glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, value_ptr(lightColor));
     glUniform3fv(glGetUniformLocation(shader, "uAmbientColor"), 1, value_ptr(ambientColor));
+
+    // texture tiling
+    glUniform1f(glGetUniformLocation(shader, "uTileX"), tileX);
+    glUniform1f(glGetUniformLocation(shader, "uTileZ"), tileZ);
+
+    // bind textures to distinct units
+    if (texture) {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture); // base sand
+        glUniform1i(glGetUniformLocation(shader, "uBaseTex"), 0);
+        // set wrap if repeating
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
+    if (texSnow) {
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, texSnow);
+        glUniform1i(glGetUniformLocation(shader, "uTexSnow"), 1);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
+    if (texStone) {
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, texStone);
+        glUniform1i(glGetUniformLocation(shader, "uTexStone"), 2);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
+    if (texGrass) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, texGrass);
+        glUniform1i(glGetUniformLocation(shader, "uTexGrass"), 3);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    }
+
+    // tints
+    glUniform3fv(glGetUniformLocation(shader, "uTintSnow"), 1, value_ptr(tintSnow));
+    glUniform3fv(glGetUniformLocation(shader, "uTintStone"), 1, value_ptr(tintStone));
+    glUniform3fv(glGetUniformLocation(shader, "uTintGrass"), 1, value_ptr(tintGrass));
+
+    // upload min/max heights (recompute after terrain changes)
+    glUniform1f(glGetUniformLocation(shader, "uMinHeight"), minHeight);
+    glUniform1f(glGetUniformLocation(shader, "uMaxHeight"), maxHeight);
 
     mesh.draw();
 }
@@ -61,32 +108,26 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 		m_shaders.push_back(sb.build());
 	}
 
+	cgra::rgba_image img(std::string(CGRA_SRCDIR) + "/res/textures/sand.jpg");
+    m_model.texture = img.uploadTexture();
+
+	// after creating shaders but before using model
+	cgra::rgba_image imgSnow(std::string(CGRA_SRCDIR) + "/res/textures/snow.jpg");
+	m_model.texSnow = imgSnow.uploadTexture();
+
+	cgra::rgba_image imgStone(std::string(CGRA_SRCDIR) + "/res/textures/stone.png");
+	m_model.texStone = imgStone.uploadTexture();
+
+	cgra::rgba_image imgGrass(std::string(CGRA_SRCDIR) + "/res/textures/grass.png");
+	m_model.texGrass = imgGrass.uploadTexture();
+
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
-	const int terrainWidth = 1000;
-	const int terrainDepth = 1000;
-
-	HeightmapGenerator terrain(terrainWidth, terrainDepth);
-
-	terrain.setParameters(
-		12.0f,      // octaves
-		0.0002f,  // frequency
-		6.0f,  // amplitude
-		0.5f,   // gain
-		1.0f    // lacunarity
-	);
-
-	terrain.regenerate();
-	terrain.addCoarseNoise(0.0004f, 3);
-	terrain.addCoarseNoise(0.008f, 2);
-	//terrain.addCoarseNoise(0.01f, 0.5);
-	terrain.addCoarseNoise(0.08f, 0.04);
-	terrain.addCoarseNoise(0.8f, 0.008);
-	//terrain.addCoarseNoise(0.3f, 0.5);
-
 	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
 
+  regenerateTerrain();
+  
 	// Lod Shader
 	shader_builder sb_lod;
 	sb_lod.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//lod_vert.glsl"));
@@ -102,6 +143,16 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	LOD.lod_thresholds = thresholds;
 }
 
+void Application::regenerateTerrain() {
+	m_terrain.setParameters(ui_octaves, ui_frequency, ui_amplitude, ui_gain, ui_lacunarity);
+	m_terrain.regenerate();
+
+    auto mm = m_terrain.computeMinMax();
+	m_model.minHeight = mm.first;
+	m_model.maxHeight = mm.second;
+
+	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+}
 
 void Application::render() {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -148,6 +199,9 @@ void Application::renderGUI() {
 	ImGui::SetNextWindowSize(ImVec2(300, 200), ImGuiSetCond_Once);
 	ImGui::Begin("Options", 0);
 
+	ImGuiIO& io = ImGui::GetIO();
+	io.FontGlobalScale = 2.5f;
+
 	// display current camera parameters
 	ImGui::Text("Application %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 	ImGui::SliderFloat("Pitch", &m_pitch, -pi<float>() / 2, pi<float>() / 2, "%.2f");
@@ -164,32 +218,115 @@ void Application::renderGUI() {
 
 	ImGui::Separator();
 
-	 if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
-        ImGui::Text("Model color");
-        if (ImGui::ColorEdit3("##ModelColor", &m_model.color[0])) {
-            // color changed � optional debug print
-            std::cout << "model color = ("
-                      << m_model.color.r << ", "
-                      << m_model.color.g << ", "
-                      << m_model.color.b << ")\n";
-        }
+	if (ImGui::CollapsingHeader("Model", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Text("Model color");
 
-        // quick preset buttons
-        ImGui::SameLine();
-        if (ImGui::Button("Red"))    m_model.color = glm::vec3(1.0f, 0.0f, 0.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("Green"))  m_model.color = glm::vec3(0.0f, 1.0f, 0.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("Blue"))   m_model.color = glm::vec3(0.0f, 0.0f, 1.0f);
-        ImGui::SameLine();
-        if (ImGui::Button("White"))  m_model.color = glm::vec3(1.0f);
+		float col[3] = { m_model.color.r, m_model.color.g, m_model.color.b };
+		if (ImGui::SliderFloat3("RGB sliders", col, 0.0f, 1.0f)) {
+			m_model.color = glm::vec3(col[0], col[1], col[2]);
+		}
+	}
 
-        // small value tweakers if you prefer sliders
-        float col[3] = { m_model.color.r, m_model.color.g, m_model.color.b };
-        if (ImGui::SliderFloat3("RGB sliders", col, 0.0f, 1.0f)) {
-            m_model.color = glm::vec3(col[0], col[1], col[2]);
-        }
+	if (ImGui::CollapsingHeader("Terrain", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+            // Tiling
+    ImGui::Text("Texture tiling");
+    float tileX = m_model.tileX;
+    float tileZ = m_model.tileZ;
+    if (ImGui::InputFloat("Tile X", &tileX, 1.0f, 10.0f)) m_model.tileX = glm::max(0.0001f, tileX);
+    if (ImGui::InputFloat("Tile Z", &tileZ, 1.0f, 10.0f)) m_model.tileZ = glm::max(0.0001f, tileZ);
+
+    ImGui::Spacing();
+    ImGui::Text("Layer tints (multiplier)");
+    // Tints: color pickers
+    float tintSnow[3]  = { m_model.tintSnow.r,  m_model.tintSnow.g,  m_model.tintSnow.b };
+    float tintStone[3] = { m_model.tintStone.r, m_model.tintStone.g, m_model.tintStone.b };
+    float tintGrass[3] = { m_model.tintGrass.r, m_model.tintGrass.g, m_model.tintGrass.b };
+
+    if (ImGui::ColorEdit3("Snow Tint", tintSnow)) {
+        m_model.tintSnow = glm::vec3(tintSnow[0], tintSnow[1], tintSnow[2]);
     }
+    if (ImGui::ColorEdit3("Stone Tint", tintStone)) {
+        m_model.tintStone = glm::vec3(tintStone[0], tintStone[1], tintStone[2]);
+    }
+    if (ImGui::ColorEdit3("Grass Tint", tintGrass)) {
+        m_model.tintGrass = glm::vec3(tintGrass[0], tintGrass[1], tintGrass[2]);
+    }
+
+    ImGui::Spacing();
+    ImGui::Text("Base fbm2d Layer Parameters");
+
+    ImGui::SliderInt("Octaves", &ui_octaves, 1, 16);
+    ImGui::InputFloat("Frequency", &ui_frequency, 0.001f, 0.0f);
+    ImGui::InputFloat("Amplitude", &ui_amplitude, 0.01f, 0.0f);
+    ImGui::InputFloat("Gain", &ui_gain, 0.01f, 0.0f);
+    ImGui::InputFloat("Lacunarity", &ui_lacunarity, 0.01f, 0.0f);
+    ImGui::Separator();
+    ImGui::Text("Extra Noise Layers");
+
+    // Display each extra layer
+    auto& layers = m_terrain.getLayers();
+    for (size_t i = 0; i < layers.size(); ++i) {
+        auto& layer = layers[i];
+        float freq = layer.first;
+        float amp  = layer.second;
+
+        ImGui::PushID((int)i); // ensure unique IDs
+        ImGui::InputFloat("Freq", &freq, 0.001f, 0.0f);
+        ImGui::InputFloat("Amp", &amp, 0.01f, 0.0f);
+        if (ImGui::Button("Remove")) {
+            m_terrain.removeLayer(i);
+            regenerateTerrain();
+            ImGui::PopID();
+            break; // break to avoid invalidating iterator
+        }
+        ImGui::PopID();
+
+        // update layer if sliders changed
+        layer.first = freq;
+        layer.second = amp;
+    }
+
+    ImGui::Separator();
+
+    if (ImGui::Button("Regenerate Base + extra layers")) {
+        regenerateTerrain();
+    }
+
+    ImGui::Text("Add New Layer");
+    static float newFreq = 0.005f;
+    static float newAmp  = 0.5f;
+
+    ImGui::InputFloat("New Layer Freq", &newFreq, 0.001f, 0.0f);
+    ImGui::InputFloat("New Layer Amp", &newAmp, 0.01f, 0.0f);
+
+    if (ImGui::Button("Add Layer")) {
+        m_terrain.addLayer(newFreq, newAmp);
+        regenerateTerrain();
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button("Reset Base")) {
+        ui_octaves = HeightmapGenerator::DefaultParams::OCTAVES;
+        ui_frequency = HeightmapGenerator::DefaultParams::FREQUENCY;
+        ui_amplitude = HeightmapGenerator::DefaultParams::AMPLITUDE;
+        ui_gain = HeightmapGenerator::DefaultParams::GAIN;
+        ui_lacunarity = HeightmapGenerator::DefaultParams::LACUNARITY;
+
+        regenerateTerrain();
+    }
+
+
+	ImGui::Spacing();
+    ImGui::Text("Thermal Erosion");
+    ImGui::SliderInt("Iterations", &ui_erosionIterations, 1, 60);
+    ImGui::InputFloat("Repose Angle", &ui_reposeAngle, 0.01f, 0.0f);
+
+    if (ImGui::Button("Apply Erosion")) {
+        m_terrain.applyThermalErosionMultiNeighbor(ui_erosionIterations, ui_reposeAngle);
+        m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+    }
+}
 
 	// finish creating window
 	ImGui::End();
