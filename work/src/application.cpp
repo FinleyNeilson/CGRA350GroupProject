@@ -124,9 +124,9 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
-	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
+	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
 
-  regenerateTerrain();
+	regenerateTerrain();
   
 	// Lod Shader
 	shader_builder sb_lod;
@@ -187,9 +187,10 @@ void Application::render() {
 	glPolygonMode(GL_FRONT_AND_BACK, (m_showWireframe) ? GL_LINE : GL_FILL);
 
 	// draw the model
-	//m_model.draw(view, proj);
+	m_model.draw(view, proj);
 
-	LOD.update_lod(view, proj);
+	// Draw lod models
+	//LOD.update_lod(view, proj);
 }
 
 void Application::renderGUI() {
