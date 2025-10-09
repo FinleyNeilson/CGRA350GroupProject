@@ -5,6 +5,7 @@
 #include "level_of_detail.h"
 
 #include <glm/glm.hpp>
+#include <GLFW/glfw3.h>
 
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -94,12 +95,32 @@ namespace lod {
         glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
         glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(1,0,0)));
 
-        m_target_position = vec3(0,max_height+2,0);
+        // Move target in a circle if enabled
+        if (m_move_target) {
+            const auto time = static_cast<float>(glfwGetTime());
+            const float radius = 10.0f;
+            const float speed = 1.0f;
+            const float x = radius * cos(speed * time);
+            const float z = radius * sin(speed * time);
+            m_target_position = vec3(x, max_height + 2, z);
+        } else {
+            m_target_position = vec3(0, max_height + 2, 0);
+        }
+
         mat4 model = translate(mat4(1.0f), m_target_position);
         model = scale(model, vec3(0.5));
-
         glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(view * model));
         m_target.draw();
+
+        // Draw outer sphere to visual lod
+        if (m_draw_lod_visualize) {
+            model = translate(mat4(1.0f), m_target_position);
+            model = scale(model, vec3(lod_thresholds.front()));
+            glUniformMatrix4fv(glGetUniformLocation(shader, "uModelViewMatrix"), 1, GL_FALSE, glm::value_ptr(view * model));
+            glPolygonMode(GL_FRONT_AND_BACK, (true) ? GL_LINE : GL_FILL);
+            m_target.draw();
+        }
+
     }
 
 } // lod

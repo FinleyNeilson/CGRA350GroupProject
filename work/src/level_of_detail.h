@@ -44,6 +44,8 @@ public:
     std::vector<float> lod_thresholds; // Vector of thresholds that determine the distance lod level will change
     GLuint shader = 0;
     float max_height = 0;
+    bool m_draw_lod_visualize = false;
+    bool m_move_target = false;
 };
 
 } // lod

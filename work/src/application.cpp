@@ -334,6 +334,14 @@ void Application::renderGUI() {
     }
 }
 
+	ImGui::Separator();
+
+	// LOD Stuff
+	if (ImGui::CollapsingHeader("LOD", ImGuiTreeNodeFlags_DefaultOpen)) {
+
+		ImGui::Checkbox("Show LOD visualize", &LOD.m_draw_lod_visualize);
+		ImGui::Checkbox("Move LOD target", &LOD.m_move_target);
+	}
 	// finish creating window
 	ImGui::End();
 }
