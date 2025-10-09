@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include "perlin.hpp" // simple 2D Perlin noise with fbm wrapper
 #include <utility>
+#include <iostream>
 
 class HeightmapGenerator {
 public:

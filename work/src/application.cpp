@@ -1,4 +1,3 @@
-
 // std
 #include <iostream>
 #include <string>
@@ -136,8 +135,10 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	LOD.shader = lod_shader;
 
 	// Create trees
-	LOD.create_tree(vec3(0,0,0));
-	LOD.create_tree(vec3(50,0,0));
+	LOD.generate_trees(m_terrain);
+
+
+	LOD.max_height = *std::max_element(m_terrain.getHeights().begin(), m_terrain.getHeights().end());
 
 	vector<float> thresholds = {10};
 	LOD.lod_thresholds = thresholds;
@@ -152,6 +153,7 @@ void Application::regenerateTerrain() {
 	m_model.maxHeight = mm.second;
 
 	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+	LOD.generate_trees(m_terrain);
 }
 
 void Application::render() {
@@ -190,7 +192,9 @@ void Application::render() {
 	m_model.draw(view, proj);
 
 	// Draw lod models
-	//LOD.update_lod(view, proj);
+	LOD.update_lod(view, proj);
+
+	LOD.draw_lod_target(view,proj);
 }
 
 void Application::renderGUI() {
@@ -329,6 +333,18 @@ void Application::renderGUI() {
     }
 }
 
+	ImGui::Separator();
+
+	// LOD Stuff
+	if (ImGui::CollapsingHeader("LOD", ImGuiTreeNodeFlags_DefaultOpen)) {
+		ImGui::Checkbox("Show Target", &LOD.m_show_target);
+		ImGui::Checkbox("Show LOD visualize", &LOD.m_draw_lod_visualize);
+		ImGui::Checkbox("Move LOD target", &LOD.m_move_target);
+		float lod_threshold = LOD.lod_thresholds.front();
+        if (ImGui::SliderFloat("LOD Threshold", &lod_threshold, 1.0f, 100.0f, "%.1f")) {
+            LOD.lod_thresholds.front() = glm::max(1.0f, lod_threshold);
+        }
+	}
 	// finish creating window
 	ImGui::End();
 }
