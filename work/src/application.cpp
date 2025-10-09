@@ -138,6 +138,9 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	// Create trees
 	LOD.generate_trees(m_terrain);
 
+
+	LOD.max_height = *std::max_element(m_terrain.getHeights().begin(), m_terrain.getHeights().end());
+
 	vector<float> thresholds = {10};
 	LOD.lod_thresholds = thresholds;
 }
@@ -191,6 +194,8 @@ void Application::render() {
 
 	// Draw lod models
 	LOD.update_lod(view, proj);
+
+	LOD.draw_lod_target(view,proj);
 }
 
 void Application::renderGUI() {
