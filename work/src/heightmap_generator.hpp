@@ -8,10 +8,10 @@ class HeightmapGenerator {
 public:
 	struct DefaultParams {
 		static constexpr int OCTAVES = 10;
-		static constexpr float FREQUENCY = 0.003f;
-		static constexpr float AMPLITUDE = 5.0f;
-		static constexpr float GAIN = 0.35f;
-		static constexpr float LACUNARITY = 1.8f;
+		static constexpr float FREQUENCY = 0.0027f;
+		static constexpr float AMPLITUDE = 5.3f;
+		static constexpr float GAIN = 0.5f;
+		static constexpr float LACUNARITY = 1.7f;
 	};
 
 	HeightmapGenerator(int width, int depth)

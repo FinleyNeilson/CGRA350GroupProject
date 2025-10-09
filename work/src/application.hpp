@@ -25,14 +25,14 @@ struct basic_model {
     GLuint texStone = 0;
     GLuint texGrass = 0;
 
-	glm::vec3 tintSnow = glm::vec3(0.8f, 0.8f, 0.85f);
-    glm::vec3 tintStone = glm::vec3(0.6f, 0.6f, 0.6f);
-    glm::vec3 tintGrass = glm::vec3(0.3f, 0.6f, 0.3f);
+	glm::vec3 tintSnow = glm::vec3(0.8f, 0.8f, 0.898f);
+    glm::vec3 tintStone = glm::vec3(0.737f, 0.745f, 0.792f);
+    glm::vec3 tintGrass = glm::vec3(0.333f, 0.451f, 0.184f);
 
 	float minHeight = 0.0f;
 	float maxHeight = 0.0f;
-	float tileX = 10.0f;
-	float tileZ = 10.0f;
+	float tileX = 18.0f;
+	float tileZ = 18.0f;
 
 	void draw(const glm::mat4& view, const glm::mat4 proj);
 
@@ -78,7 +78,7 @@ private:
 	float ui_lacunarity = HeightmapGenerator::DefaultParams::LACUNARITY;
 
 	int ui_erosionIterations = 60;
-	float ui_reposeAngle = 35.0f;
+	float ui_reposeAngle = 50.0f;
 
 	// geometry
 	basic_model m_model;
