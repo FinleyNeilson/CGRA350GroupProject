@@ -72,7 +72,7 @@ namespace perlin {
 			frequency *= lacunarity;
 		}
 
-		return sum / maxAmp; // normalized to roughly [-1,1]
+		return sum;
 	}
 
-}  // namespace perlin
+}

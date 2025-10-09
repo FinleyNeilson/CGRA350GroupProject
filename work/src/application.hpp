@@ -21,6 +21,19 @@ struct basic_model {
 	glm::mat4 modelTransform{ 1.0 };
 	GLuint texture;
 
+	GLuint texSnow = 0;
+    GLuint texStone = 0;
+    GLuint texGrass = 0;
+
+	glm::vec3 tintSnow = glm::vec3(0.8f, 0.8f, 0.85f);
+    glm::vec3 tintStone = glm::vec3(0.6f, 0.6f, 0.6f);
+    glm::vec3 tintGrass = glm::vec3(0.3f, 0.6f, 0.3f);
+
+	float minHeight = 0.0f;
+	float maxHeight = 0.0f;
+	float tileX = 10.0f;
+	float tileZ = 10.0f;
+
 	void draw(const glm::mat4& view, const glm::mat4 proj);
 
 };
@@ -64,8 +77,8 @@ private:
 	float ui_gain = HeightmapGenerator::DefaultParams::GAIN;
 	float ui_lacunarity = HeightmapGenerator::DefaultParams::LACUNARITY;
 
-	int ui_erosionIterations = 5;
-	float ui_reposeAngle = 0.5f;
+	int ui_erosionIterations = 60;
+	float ui_reposeAngle = 35.0f;
 
 	// geometry
 	basic_model m_model;
@@ -79,6 +92,7 @@ public:
 	Application& operator=(const Application&) = delete;
 
 	// rendering callbacks (every frame)
+	void regenerateTerrain();
 	void render();
 	void renderGUI();
 
