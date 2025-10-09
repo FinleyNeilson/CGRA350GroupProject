@@ -46,6 +46,7 @@ public:
     float max_height = 0;
     bool m_draw_lod_visualize = false;
     bool m_move_target = false;
+    bool m_show_target = true;
 };
 
 } // lod

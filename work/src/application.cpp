@@ -1,4 +1,3 @@
-
 // std
 #include <iostream>
 #include <string>
@@ -338,9 +337,13 @@ void Application::renderGUI() {
 
 	// LOD Stuff
 	if (ImGui::CollapsingHeader("LOD", ImGuiTreeNodeFlags_DefaultOpen)) {
-
+		ImGui::Checkbox("Show Target", &LOD.m_show_target);
 		ImGui::Checkbox("Show LOD visualize", &LOD.m_draw_lod_visualize);
 		ImGui::Checkbox("Move LOD target", &LOD.m_move_target);
+		float lod_threshold = LOD.lod_thresholds.front();
+        if (ImGui::SliderFloat("LOD Threshold", &lod_threshold, 1.0f, 100.0f, "%.1f")) {
+            LOD.lod_thresholds.front() = glm::max(1.0f, lod_threshold);
+        }
 	}
 	// finish creating window
 	ImGui::End();

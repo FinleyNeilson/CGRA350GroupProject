@@ -91,6 +91,10 @@ namespace lod {
     }
 
     void level_of_detail::draw_lod_target(const glm::mat4 &view, const glm::mat4 &proj) {
+        if (!m_show_target) {
+            return;
+        }
+
         glUseProgram(shader);
         glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
         glUniform3fv(glGetUniformLocation(shader, "uColor"), 1, value_ptr(vec3(1,0,0)));
@@ -104,7 +108,7 @@ namespace lod {
             const float z = radius * sin(speed * time);
             m_target_position = vec3(x, max_height + 2, z);
         } else {
-            m_target_position = vec3(0, max_height + 2, 0);
+            m_target_position = vec3(0, max_height + 1, 0);
         }
 
         mat4 model = translate(mat4(1.0f), m_target_position);
