@@ -20,6 +20,8 @@ SET(sources
 	"main.cpp"
 
 	"CMakeLists.txt"
+		"level_of_detail.cpp"
+		"level_of_detail.h"
 )
 
 # Add executable target and link libraries

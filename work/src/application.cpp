@@ -16,6 +16,9 @@
 #include "cgra/cgra_shader.hpp"
 #include "cgra/cgra_wavefront.hpp"
 
+// Lod
+#include "level_of_detail.h"
+
 
 using namespace std;
 using namespace cgra;
@@ -121,7 +124,23 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
-    regenerateTerrain();
+	m_model.mesh = plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
+
+	regenerateTerrain();
+  
+	// Lod Shader
+	shader_builder sb_lod;
+	sb_lod.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//lod_vert.glsl"));
+	sb_lod.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//lod_frag.glsl"));
+	GLuint lod_shader = sb_lod.build();
+	LOD.shader = lod_shader;
+
+	// Create trees
+	LOD.create_tree(vec3(0,0,0));
+	LOD.create_tree(vec3(50,0,0));
+
+	vector<float> thresholds = {10};
+	LOD.lod_thresholds = thresholds;
 }
 
 void Application::regenerateTerrain() {
@@ -169,6 +188,9 @@ void Application::render() {
 
 	// draw the model
 	m_model.draw(view, proj);
+
+	// Draw lod models
+	//LOD.update_lod(view, proj);
 }
 
 void Application::renderGUI() {
