@@ -81,6 +81,8 @@ private:
 	int ui_erosionIterations = 60;
 	float ui_reposeAngle = 50.0f;
 
+	float grassTopHeight = -2;
+
 	// geometry
 	basic_model m_model;
 

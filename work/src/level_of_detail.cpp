@@ -68,7 +68,7 @@ namespace lod {
         tree_rotations.push_back(rotation);
     }
 
-    void level_of_detail::generate_trees(const HeightmapGenerator& m_terrain) {
+    void level_of_detail::generate_trees(const HeightmapGenerator& m_terrain, float grassTopHeight) {
         tree_positions.clear();
         tree_rotations.clear();
         std::mt19937 rng(std::random_device{}());
@@ -83,7 +83,7 @@ namespace lod {
                 clamp(x, 0.f, 20.f);
                 clamp(y, 0.f, 20.f);
                 float height = m_terrain.getHeight(x*50.f,y*50.f);
-                if (height < -2) {
+                if (height < grassTopHeight) {
                     create_tree(vec3(x - 10,height ,y - 10), rotation);
                 }
             }
