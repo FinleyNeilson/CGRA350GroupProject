@@ -20,8 +20,6 @@ namespace lod {
     void level_of_detail::update_lod(const mat4 &view, mat4 &proj) {
         glUseProgram(shader);
         glUniformMatrix4fv(glGetUniformLocation(shader, "uProjectionMatrix"), 1, false, value_ptr(proj));
-        glUniform3fv(glGetUniformLocation(shader, "uLightColor"), 1, value_ptr(vec3(1,1,1)));
-        glUniform3fv(glGetUniformLocation(shader, "uAmbientColor"), 1, value_ptr(vec3(1,1,1)));
 
         for (const auto& pos : tree_positions) {
             const int lod = get_lod_level(pos);

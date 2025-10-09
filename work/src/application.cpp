@@ -64,8 +64,6 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	m_currentShaderIdx = 0;
 	m_model.shader = m_shaders[m_currentShaderIdx];
 
-	LOD.shader = m_shaders[m_currentShaderIdx];
-
 	const int terrainWidth = 1000;
 	const int terrainDepth = 1000;
 
@@ -88,6 +86,13 @@ Application::Application(GLFWwindow* window) : m_window(window) {
 	//terrain.addCoarseNoise(0.3f, 0.5);
 
 	m_model.mesh = plane_terrain(terrain.getWidth(), terrain.getDepth(), terrain);
+
+	// Lod Shader
+	shader_builder sb_lod;
+	sb_lod.set_shader(GL_VERTEX_SHADER, CGRA_SRCDIR + std::string("//res//shaders//lod_vert.glsl"));
+	sb_lod.set_shader(GL_FRAGMENT_SHADER, CGRA_SRCDIR + std::string("//res//shaders//lod_frag.glsl"));
+	GLuint lod_shader = sb_lod.build();
+	LOD.shader = lod_shader;
 
 	// Create trees
 	LOD.create_tree(vec3(0,0,0));
