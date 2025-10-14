@@ -165,7 +165,7 @@ void Application::regenerateTerrain() {
 
   float distance = mm.second - mm.first;
 
-  grassTopHeight = mm.first + distance * 0.2f;
+  grassTopHeight = mm.first + distance * 0.3f;
 
   m_model.mesh =
       plane_terrain(m_terrain.getWidth(), m_terrain.getDepth(), m_terrain);
