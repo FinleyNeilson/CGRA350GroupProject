@@ -1,6 +1,6 @@
 Procedural Terrain Generation (OpenGL)
 
-This project is a procedural terrain generation system developed for the Computer Graphics (CGRA) course. The application generates landscapes using fractal noise, supports interactive terrain editing, and renders vegetation using a level-of-detail (LOD) system to maintain performance.
+This project is a procedural terrain generation system developed for the Computer Graphics (CGRA354) course. The application generates landscapes using fractal noise, supports interactive terrain editing, and renders vegetation using a level-of-detail (LOD) system to maintain performance.
 
 The program includes real-time parameter controls through an ImGui interface, allowing users to experiment with procedural terrain techniques and erosion simulation.
 
